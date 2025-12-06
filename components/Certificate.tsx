@@ -42,27 +42,43 @@ export const Certificate: React.FC<CertificateProps> = ({ config, onClose, onDow
     setTimeout(() => window.print(), 100);
   };
 
+  const handleCorrection = () => {
+      const subject = `Certificate Correction: ${config.recipientName}`;
+      const body = `Hi Team,\n\nI attended the session "${config.webinarTitle}".\n\nThere is an error in my certificate details.\n\nName on Certificate: ${config.recipientName}\n\nPlease correct it to: \n\n[Type correct name here]`;
+      window.location.href = `mailto:support@chrysalis.world?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/95 flex flex-col items-center justify-center p-4 print:p-0 print:bg-white print:static print:block overflow-hidden">
       
       {/* Controls */}
-      <div className="fixed top-4 right-4 flex gap-4 no-print z-50">
+      <div className="fixed top-4 right-4 flex gap-3 no-print z-50">
+        <button 
+          onClick={handleCorrection}
+          className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-2.5 rounded-full font-medium transition-colors flex items-center gap-2 text-sm border border-slate-700"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+          Request Correction
+        </button>
+
         <button 
           onClick={handlePrint}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full shadow-lg font-semibold transition-colors flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full shadow-lg font-semibold transition-colors flex items-center gap-2 text-sm"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
             <rect x="6" y="14" width="12" height="8"></rect>
           </svg>
-          Print / Save PDF
+          Download Certificate
         </button>
+        
         <button 
           onClick={onClose}
-          className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full backdrop-blur-md font-semibold transition-colors"
+          className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-full backdrop-blur-md transition-colors"
+          title="Close"
         >
-          Close
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
         </button>
       </div>
 

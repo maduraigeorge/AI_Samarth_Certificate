@@ -1,5 +1,5 @@
 {
-  "name": "CertifiZoom - Google Sheets Edition",
+  "name": "Ai Samarth Certificate",
   "description": "A certificate portal that reads attendee data from a Google Sheet, verifies eligibility, and writes back login/download timestamps.",
   "requestFramePermissions": []
 }
