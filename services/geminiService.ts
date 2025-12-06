@@ -2,12 +2,20 @@
 import { GoogleGenAI } from "@google/genai";
 import { Participant, QuizQuestion } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization to prevent "process is not defined" crashes on page load in some local environments
+const getAiClient = () => {
+  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : '';
+  if (!apiKey) {
+    console.warn("API Key is missing or process.env is unavailable.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export const generateCertificateMessage = async (webinarTopic: string, participant: Participant): Promise<string> => {
   const fullName = `${participant.firstName} ${participant.lastName}`;
   
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Write a short, professional, and inspiring single-sentence commendation for a certificate of completion for the "AI Samarth" training program. 
@@ -28,6 +36,7 @@ export const generateCertificateMessage = async (webinarTopic: string, participa
 
 export const generateQuiz = async (topic: string): Promise<QuizQuestion[]> => {
   try {
+    const ai = getAiClient();
     // Updated prompt for 6 questions on AI for Teachers
     const prompt = `Generate 6 multiple-choice questions (MCQs) to test a teacher's understanding of "AI in Education" and the topic: "${topic}".
     The questions should cover basics of Generative AI, Prompt Engineering, and Ethical use of AI in classrooms.
