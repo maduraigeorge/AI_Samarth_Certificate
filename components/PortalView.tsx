@@ -21,6 +21,25 @@ export const PortalView: React.FC<PortalViewProps> = ({
     onStartAssessment,
     setErrorMsg
 }) => {
+    
+    const handleContactSupport = () => {
+        const subject = "Support Request: AI Samarth Certificate Verification";
+        const body = `Hi Support Team,
+
+I am unable to verify my attendance on the portal.
+
+Here are my details:
+- Input ID used: ${identifier || '[Enter Email/Phone]'}
+- Full Name: [Enter Name]
+- School Name: [Enter School]
+- Date of Training: [Enter Date]
+
+Please check the records and assist me.
+
+Thank you.`;
+        window.location.href = `mailto:support@chrysalis.world?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
     return (
         <div className="w-full max-w-[480px] animate-fade-in-up">
             <div className="glass-panel rounded-2xl shadow-2xl border border-white/60 overflow-hidden ring-1 ring-white/20">
@@ -76,6 +95,20 @@ export const PortalView: React.FC<PortalViewProps> = ({
                             )}
                         </button>
                     </form>
+
+                     {/* Support Link */}
+                     <div className="flex justify-center pt-2">
+                        <button
+                            type="button"
+                            onClick={handleContactSupport}
+                            className="text-xs font-medium text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1.5 border-b border-transparent hover:border-blue-200 pb-0.5 group"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 group-hover:text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            Issues with verification? Write to us
+                        </button>
+                    </div>
 
                     {/* Result Area */}
                     {eligibilityResult && (
