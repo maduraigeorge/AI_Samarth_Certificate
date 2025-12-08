@@ -122,7 +122,7 @@ export const fetchSheetData = async (): Promise<WebinarData> => {
             loginTime: loginTime,
             downloadTime: downloadTime
         };
-    }).filter(p => (p.email && p.email.includes('@'))); // Ensure valid email for logging purposes
+    }).filter(p => (p.email && p.email.includes('@')) || (p.phone && p.phone.length > 5)); // Allow valid email OR valid phone
 
     return {
       id: SHEET_ID,
@@ -177,20 +177,23 @@ export const verifyAndLogUser = async (identifier: string): Promise<EligibilityR
         };
     }
 
-    // 3. Log "Verified" Action (Using EMAIL as key)
+    // 3. Log "Verified" Action (Using EMAIL as key if available, else generic placeholder logic could be used but sticking to email for now)
     const now = new Date().toISOString();
     const emailKey = participant.email.toLowerCase();
 
     // Optimistic Update (Local Storage)
-    const overlay = getOverlayData();
-    overlay[emailKey] = {
-        ...overlay[emailKey],
-        loginTime: now
-    };
-    saveOverlayData(overlay);
+    if (emailKey) {
+        const overlay = getOverlayData();
+        overlay[emailKey] = {
+            ...overlay[emailKey],
+            loginTime: now
+        };
+        saveOverlayData(overlay);
+    }
     participant.loginTime = now;
 
     // Network Update (Fire and forget)
+    // Note: If email is missing, this logs empty string which is fine for current logic
     logToAppsScript(participant.email, 'VERIFY');
 
     return {
@@ -206,16 +209,17 @@ export const markQuizPassedInSheet = async (participantId: string): Promise<void
     const data = await fetchSheetData();
     const participant = data.participants.find(p => p.id === participantId);
     
-    if (participant && participant.email) {
-        const email = participant.email.toLowerCase();
-
+    if (participant) {
         // Optimistic Update
-        const overlay = getOverlayData();
-        overlay[email] = {
-            ...overlay[email],
-            quizPassed: true
-        };
-        saveOverlayData(overlay);
+        if (participant.email) {
+            const email = participant.email.toLowerCase();
+            const overlay = getOverlayData();
+            overlay[email] = {
+                ...overlay[email],
+                quizPassed: true
+            };
+            saveOverlayData(overlay);
+        }
 
         // Network Update
         logToAppsScript(participant.email, 'QUIZ_PASS');
@@ -227,18 +231,20 @@ export const markDownloadInSheet = async (participantId: string): Promise<void> 
     const data = await fetchSheetData();
     const participant = data.participants.find(p => p.id === participantId);
     
-    if (participant && participant.email) {
+    if (participant) {
         const now = new Date().toISOString();
-        const email = participant.email.toLowerCase();
-
+        
         // Optimistic Update
-        const overlay = getOverlayData();
-        overlay[email] = {
-            ...overlay[email],
-            certificateDownloaded: true,
-            downloadTime: now
-        };
-        saveOverlayData(overlay);
+        if (participant.email) {
+            const email = participant.email.toLowerCase();
+            const overlay = getOverlayData();
+            overlay[email] = {
+                ...overlay[email],
+                certificateDownloaded: true,
+                downloadTime: now
+            };
+            saveOverlayData(overlay);
+        }
 
         // Network Update
         logToAppsScript(participant.email, 'DOWNLOAD');
