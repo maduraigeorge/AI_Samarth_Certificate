@@ -126,7 +126,7 @@ export const fetchSheetData = async (): Promise<WebinarData> => {
 
     return {
       id: SHEET_ID,
-      topic: "Digital Literacy Training (Live Sheet)",
+      topic: "AI Literacy",
       startTime: new Date().toISOString(),
       duration: 60,
       participants

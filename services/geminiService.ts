@@ -1,38 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
-import { Participant, QuizQuestion } from '../types';
 
-// Lazy initialization to prevent "process is not defined" crashes on page load in some local environments
-const getAiClient = () => {
-  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : '';
-  if (!apiKey) {
-    console.warn("API Key is missing or process.env is unavailable.");
-  }
-  return new GoogleGenAI({ apiKey });
-};
+import { QuizQuestion } from '../types';
 
-export const generateCertificateMessage = async (webinarTopic: string, participant: Participant): Promise<string> => {
-  const fullName = `${participant.firstName} ${participant.lastName}`;
-  
-  try {
-    const ai = getAiClient();
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Write a short, professional, and inspiring single-sentence commendation for a certificate of completion for the "AI Samarth" training program. 
-      The recipient is "${fullName}", a teacher at "${participant.schoolName}" who handles "${participant.gradeHandled}".
-      The webinar topic was "${webinarTopic}".
-      The tone should be formal, appreciating their effort to integrate AI into their teaching practice.
-      Do not include the name in the sentence itself.
-      Example output: "For demonstrating exceptional dedication to advancing digital literacy and AI adoption within Grade 5 education..."
-      Output ONLY the sentence.`,
-    });
-    
-    return response.text.trim();
-  } catch (error) {
-    console.error("Gemini generation failed", error);
-    return `For successfully completing the AI Samarth training on ${webinarTopic}.`;
-  }
-};
-
+// Hardcoded pool of questions - no AI generation required
 const FIXED_QUIZ_POOL: QuizQuestion[] = [
   {
     id: 1,
