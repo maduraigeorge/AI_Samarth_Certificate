@@ -86,6 +86,9 @@ export const fetchSheetData = async (): Promise<WebinarData> => {
         const phone = row['Phone'] || row['phone'] || row['Mobile'] || row['mobile'] || row['Contact'] || row['contact'] || '';
         const durationStr = row['Total_Duration_Mins'] || '0';
         
+        // Try to find a date column
+        const webinarDate = row['Date'] || row['date'] || row['Session Date'] || row['session_date'] || row['Start Time'] || row['start_time'];
+
         // Check local storage for overlay data using email as key
         const localData = overlay[email.toLowerCase()] || {};
 
@@ -110,6 +113,7 @@ export const fetchSheetData = async (): Promise<WebinarData> => {
             schoolName: row['School Name'] || 'Unknown School',
             gender: row['Gender'] || '',
             gradeHandled: row['Grade Handled'] || '',
+            webinarDate: webinarDate, // Mapped date
             
             // App State
             status: 'attended' as const,

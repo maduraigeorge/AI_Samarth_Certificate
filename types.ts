@@ -10,6 +10,7 @@ export interface Participant {
   schoolName: string;         // "School Name"
   gender: string;             // "Gender"
   gradeHandled: string;       // "Grade Handled"
+  webinarDate?: string;       // "Date", "Session Date", "Start Time"
   
   // --- App Logic Columns (Added by System) ---
   status: 'attended' | 'absent';
@@ -30,6 +31,7 @@ export interface WebinarData {
 export interface CertificateConfig {
   recipientName: string;
   webinarTitle: string;
+  schoolName: string; // Added field
   date: string;
   customMessage?: string;
 }

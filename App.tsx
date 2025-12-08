@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Participant, CertificateConfig, AppView, EligibilityResult, QuizQuestion } from './types';
 import { verifyAndLogUser, markDownloadInSheet, markQuizPassedInSheet } from './services/sheetService';
-import { generateCertificateMessage, generateQuiz } from './services/geminiService';
+import { generateQuiz } from './services/geminiService';
 import { Certificate } from './components/Certificate';
 import { Quiz } from './components/Quiz';
 import { Header } from './components/Header';
@@ -39,16 +39,35 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Safeguard: If we are in Quiz or Certificate view but loose participant data (e.g. race condition on reset), go back to Portal
+  useEffect(() => {
+    if ((view === AppView.QUIZ || view === AppView.CERTIFICATE) && !eligibilityResult?.participant) {
+      setView(AppView.PORTAL);
+      setLoading(false); // Ensure we aren't stuck loading
+    }
+  }, [view, eligibilityResult]);
+
   const handleGenerateCertificateForStudent = useCallback(async (participant: Participant, topic: string) => {
     setActiveParticipantId(participant.id);
     const fullName = `${participant.firstName} ${participant.lastName}`;
-    const aiMessage = await generateCertificateMessage(topic, participant);
+    
+    // Determine the Date to show on certificate
+    // Requirement: "date (only month) of webinar attended from Google sheet"
+    // Format: "Month Year" (e.g., "October 2023")
+    let displayDate = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    if (participant.webinarDate) {
+        const d = new Date(participant.webinarDate);
+        if (!isNaN(d.getTime())) {
+             displayDate = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+    }
 
     const config: CertificateConfig = {
       recipientName: fullName,
       webinarTitle: topic,
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      customMessage: aiMessage
+      schoolName: participant.schoolName,
+      date: displayDate
     };
 
     setCertificateConfig(config);
@@ -144,23 +163,25 @@ const App: React.FC = () => {
 
       <Header />
 
-      {/* Main Content Area - Enforce single screen fit */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4 relative z-10 overflow-hidden h-[calc(100vh-80px)]">
+      {/* Main Content Area - Responsive Flex */}
+      <main className="flex-1 flex flex-col items-center justify-center p-2 md:p-4 relative z-10 overflow-y-auto overflow-x-hidden w-full">
         
-        <div className="w-full h-full flex flex-col items-center justify-center max-w-4xl mx-auto">
+        <div className="w-full min-h-full flex flex-col items-center justify-center max-w-4xl mx-auto py-4">
           
           {/* Error Toast */}
           {errorMsg && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-full max-w-lg bg-red-50/95 backdrop-blur border border-red-200 text-red-700 px-6 py-4 rounded-xl flex items-center gap-3 shadow-xl animate-fade-in-up z-50">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <div className="fixed top-20 md:top-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-lg bg-red-50/95 backdrop-blur border border-red-200 text-red-700 px-4 py-3 md:px-6 md:py-4 rounded-xl flex items-center gap-3 shadow-xl animate-fade-in-up z-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   <span className="text-sm font-medium">{errorMsg}</span>
-                  <button onClick={() => setErrorMsg(null)} className="ml-auto text-red-400 hover:text-red-600"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+                  <button onClick={() => setErrorMsg(null)} className="ml-auto text-red-400 hover:text-red-600 p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
               </div>
           )}
           
           {/* --- VIEW: ATTENDEE PORTAL --- */}
           {view === AppView.PORTAL && (
             <PortalView 
+                // CRITICAL FIX: The key ensures the component is fully remounted when switching states, preventing empty screens.
+                key={eligibilityResult?.participant ? 'verified' : 'login'}
                 email={identifier}
                 setEmail={setIdentifier}
                 loading={loading}
@@ -168,6 +189,10 @@ const App: React.FC = () => {
                 eligibilityResult={eligibilityResult}
                 onStartAssessment={handleStartAssessment}
                 setErrorMsg={setErrorMsg}
+                onReset={() => {
+                  setEligibilityResult(null);
+                  setIdentifier('');
+                }}
             />
           )}
           
